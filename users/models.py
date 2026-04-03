@@ -3,7 +3,6 @@ from django.db import models
 from courses.models import Course, Lesson
 
 class User(AbstractUser):
-    username = None
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=20, blank=True)
     city = models.CharField(max_length=100, blank=True)
@@ -11,6 +10,23 @@ class User(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
+
+    groups = models.ManyToManyField(
+        'auth.Group',
+        verbose_name='groups',
+        blank=True,
+        help_text='The groups this user belongs to.',
+        related_name="+",
+        related_query_name="user",
+    )
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        verbose_name='user permissions',
+        blank=True,
+        help_text='Specific permissions for this user.',
+        related_name="+",
+        related_query_name="user",
+    )
 
 class Payment(models.Model):
     PAYMENT_METHOD_CHOICES = [
