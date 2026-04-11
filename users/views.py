@@ -1,11 +1,35 @@
-from rest_framework import viewsets, generics, filters
+from rest_framework import viewsets, generics, filters, permissions
 from .models import User, Payment
 from .serializers import UserSerializer, PaymentSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 
+
+class IsOwnerOrAdmin:
+    pass
+
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_permissions(self):
+        """Разрешаем регистрацию (create) всем, остальные действия только админам или себе."""
+        if self.action == 'create':
+            # Регистрация доступна всем
+            permission_classes = [permissions.AllowAny]
+        elif self.action in ['update', 'partial_update', 'destroy']:
+            # Редактировать и удалять можно только свой профиль или если ты админ
+            permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+        else: # list, retrieve
+            # Список и просмотр профилей - только для авторизованных
+            permission_classes = [permissions.IsAuthenticated]
+        return [permission() for permission in permission_classes]
+
+    def perform_create(self, serializer):
+        # При регистрации пароль нужно хешировать
+        user = serializer.save()
+        user.set_password(user.password)
+        user.save()
 
 class PaymentListView(generics.ListAPIView):
     queryset = Payment.objects.all()
