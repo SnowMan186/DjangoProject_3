@@ -13,20 +13,24 @@ class CourseViewSet(viewsets.ModelViewSet):
         return CourseListSerializer
 
     def get_permissions(self):
+        """
+        Мгновенно определяем права доступа для каждого действия.
+        Используем ~IsModerator для запрета создания.
+        """
         if self.action in ['list', 'retrieve']:
             # Просмотр списка и деталей разрешен всем авторизованным пользователям
             permission_classes = [permissions.IsAuthenticated]
 
         elif self.action == 'create':
-            # Создавать курсы могут только обычные пользователи (владельцы)
-            permission_classes = [permissions.IsAuthenticated]
+            # СОЗДАНИЕ: Только Аутентифицированные И НЕ Модераторы
+            permission_classes = [permissions.IsAuthenticated, ~IsModerator]
 
         elif self.action in ['update', 'partial_update']:
-            # Редактировать могут: Владельцы/Админы ИЛИ Модераторы (только PATCH)
+            # РЕДАКТИРОВАНИЕ: Владельцы/Админы ИЛИ Модераторы (логика внутри IsOwnerOrAdmin)
             permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
         elif self.action == 'destroy':
-            # Удалять могут ТОЛЬКО Админы или Владельцы. Модераторам запрещено.
+            # УДАЛЕНИЕ: Только Владельцы или Админы (Модераторам запрещено)
             permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
         return [permission() for permission in permission_classes]
@@ -43,8 +47,9 @@ class LessonListCreate(generics.ListCreateAPIView):
     def get_permissions(self):
         if self.request.method == 'GET':
             permission_classes = [permissions.IsAuthenticated]
-        else:  # POST (создание)
-            permission_classes = [permissions.IsAuthenticated]
+        else:
+            # СОЗДАНИЕ: Только Аутентифицированные И НЕ Модераторы
+            permission_classes = [permissions.IsAuthenticated, ~IsModerator]
         return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer):
@@ -56,6 +61,6 @@ class LessonRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LessonSerializer
 
     def get_permissions(self):
-        # Для всех методов используем один пермишен с логикой внутри
+        # РЕДАКТИРОВАНИЕ/УДАЛЕНИЕ: Владельцы/Админы ИЛИ Модераторы (только для PATCH)
         permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
         return [permission() for permission in permission_classes]
