@@ -18,16 +18,16 @@ class CourseViewSet(viewsets.ModelViewSet):
             permission_classes = [permissions.IsAuthenticated]
 
         elif self.action == 'create':
-            # Создавать курсы могут только обычные пользователи (владельцы), но не модераторы!
+            # Создавать курсы могут только обычные пользователи (владельцы)
             permission_classes = [permissions.IsAuthenticated]
 
         elif self.action in ['update', 'partial_update']:
-            # Редактировать могут: Модераторы ИЛИ Владельцы (IsOwnerOrAdmin)
-            permission_classes = [permissions.IsAuthenticated, IsModerator | IsOwnerOrAdmin]
+            # Редактировать могут: Владельцы/Админы ИЛИ Модераторы (только PATCH)
+            permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
         elif self.action == 'destroy':
-            # Удалять не могут ни модераторы, ни владельцы! Только админы.
-            permission_classes = [permissions.IsAdminUser]
+            # Удалять могут ТОЛЬКО Админы или Владельцы. Модераторам запрещено.
+            permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
         return [permission() for permission in permission_classes]
 
@@ -56,15 +56,6 @@ class LessonRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = LessonSerializer
 
     def get_permissions(self):
-        if self.request.method == 'GET':
-            permission_classes = [permissions.IsAuthenticated]
-
-        elif self.request.method in ['PUT', 'PATCH']:
-            # Редактировть: Модераторы ИЛИ Владельцы
-            permission_classes = [permissions.IsAuthenticated, IsModerator | IsOwnerOrAdmin]
-
-        elif self.request.method == 'DELETE':
-            # Удалять нельзя ни модераторам, ни владельцам! Только админам.
-            permission_classes = [permissions.IsAdminUser]
-
+        # Для всех методов используем один пермишен с логикой внутри
+        permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
         return [permission() for permission in permission_classes]

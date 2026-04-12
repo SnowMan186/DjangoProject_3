@@ -10,6 +10,7 @@ media/
 static/
 .env
 
+
 # DRF / Rest stuff
 .vscode/
 .idea/
@@ -22,3 +23,4 @@ Thumbs.db
 # Virtualenv / Python envs (if используете venv)
 venv/
 env/
+.venv/
