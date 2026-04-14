@@ -1,11 +1,17 @@
-from rest_framework import viewsets, generics, permissions
-from .models import Course, Lesson
+from rest_framework import viewsets, generics, permissions, status
+from .models import Course, Lesson, Subscription
 from .serializers import LessonSerializer, CourseDetailSerializer, CourseListSerializer
 from users.permissions import IsModerator, IsOwnerOrAdmin
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from .paginators import StandardResultsSetPagination
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
+    pagination_class = StandardResultsSetPagination
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -64,3 +70,29 @@ class LessonRetrieveUpdateDestroy(generics.RetrieveUpdateDestroyAPIView):
         # РЕДАКТИРОВАНИЕ/УДАЛЕНИЕ: Владельцы/Админы ИЛИ Модераторы (только для PATCH)
         permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
         return [permission() for permission in permission_classes]
+
+
+class SubscriptionView(APIView):
+    """
+    Эндпоинт для подписки/отписки пользователя на курс.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        course_id = request.data.get('course_id')
+
+        if not course_id:
+            return Response({"error": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        course = get_object_or_404(Course, id=course_id)
+
+        sub_item, created = Subscription.objects.get_or_create(user=user, course=course)
+
+        if not created:
+            sub_item.delete()
+            message = 'Подписка удалена'
+        else:
+            message = 'Подписка добавлена'
+
+        return Response({"message": message}, status=status.HTTP_200_OK)
