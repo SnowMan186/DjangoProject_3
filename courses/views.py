@@ -12,6 +12,7 @@ from .paginators import StandardResultsSetPagination
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
     pagination_class = StandardResultsSetPagination
+    serializer_class = LessonSerializer
 
     def get_serializer_class(self):
         if self.action == 'retrieve':

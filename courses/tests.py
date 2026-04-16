@@ -63,3 +63,45 @@ class CoursesAPITestCase(TestCase):
             'video_url': 'https://vimeo.com'  # Не YouTube!
         })
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_subscription_toggle(self):
+        """Тестируем функционал подписки и отписки."""
+        client = self.client
+        url = '/api/courses/subscribe/'
+
+        # Аутентифицируем пользователя
+        client.force_authenticate(user=self.user1)
+
+        # --- ТЕСТ 1: Пользователь подписывается на курс ---
+        response = client.post(url, {'course_id': self.course2.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Подписка добавлена')
+
+        # Проверяем, что подписка создалась в базе
+        self.assertTrue(self.user1.subscriptions.filter(course=self.course2).exists())
+
+        # --- ТЕСТ 2: Пользователь отписывается от того же курса ---
+        response = client.post(url, {'course_id': self.course2.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['message'], 'Подписка удалена')
+
+        # Проверяем, что подписка удалилась из базы
+        self.assertFalse(self.user1.subscriptions.filter(course=self.course2).exists())
+
+    def test_course_crud_permissions(self):
+        """Тестируем создание и удаление курсов с разными правами."""
+        client = self.client
+
+        # Аутентифицируем пользователя1 (владелец)
+        client.force_authenticate(user=self.user1)
+
+        # --- ТЕСТ 1: Пользователь может СОЗДАТЬ свой курс ---
+        response = client.post('/api/courses/', {
+            'title': 'Новый курс от user1',
+            'description': 'Описание'
+        })
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        # --- ТЕСТ 2: Пользователь НЕ может УДАЛИТЬ чужой курс ---
+        response = client.delete(f'/api/courses/{self.course2.id}/')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
