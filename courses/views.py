@@ -1,4 +1,5 @@
 from rest_framework import viewsets, generics, permissions, status
+from users.models import Payment
 from .models import Course, Lesson, Subscription
 from .serializers import LessonSerializer, CourseDetailSerializer, CourseListSerializer
 from users.permissions import IsModerator, IsOwnerOrAdmin
@@ -7,6 +8,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .paginators import StandardResultsSetPagination
+from .services.payment_service import create_stripe_product_and_price, create_checkout_session
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -97,3 +99,51 @@ class SubscriptionView(APIView):
             message = 'Подписка добавлена'
 
         return Response({"message": message}, status=status.HTTP_200_OK)
+
+
+class CreatePaymentSessionView(APIView):
+    """
+    Создает платежную сессию для курса.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        course_id = request.data.get('course_id')
+
+        if not course_id:
+            return Response({"error": "course_id is required"}, status=400)
+
+        try:
+            course = Course.objects.get(id=course_id)
+
+            # 1. Создаем запись о платеже в нашей БД (опционально, но полезно)
+            payment = Payment.objects.create(
+                user=request.user,
+                course=course,
+                amount=course.price,
+                payment_method='stripe'
+            )
+
+            # 2. Вызываем сервисную функцию для работы со Stripe
+            product, price = create_stripe_product_and_price(course)
+
+            if not price:
+                return Response({"error": "Failed to create price in Stripe"}, status=500)
+
+            session = create_checkout_session(price.id)
+
+            if not session:
+                return Response({"error": "Failed to create checkout session"}, status=500)
+
+            # 3. Сохраняем ID сессии в нашей БД (опционально)
+            payment.stripe_session_id = session.id
+            payment.save()
+
+            # 4. Отдаем пользователю ссылку на оплату
+            return Response({
+                "message": "Payment session created",
+                "url": session.url
+            }, status=201)
+
+        except Course.DoesNotExist:
+            return Response({"error": "Course not found"}, status=404)
