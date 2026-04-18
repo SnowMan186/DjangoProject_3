@@ -11,7 +11,6 @@ from .paginators import StandardResultsSetPagination
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
-    pagination_class = StandardResultsSetPagination
     serializer_class = LessonSerializer
 
     def get_serializer_class(self):
@@ -50,6 +49,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 class LessonListCreate(generics.ListCreateAPIView):
     queryset = Lesson.objects.all()
     serializer_class = LessonSerializer
+    pagination_class = StandardResultsSetPagination
 
     def get_permissions(self):
         if self.request.method == 'GET':
