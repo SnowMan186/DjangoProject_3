@@ -47,6 +47,21 @@ class CourseViewSet(viewsets.ModelViewSet):
         # Привязываем курс к авторизованному пользователю при создании
         serializer.save(owner=self.request.user)
 
+    def perform_update(self, serializer, send_course_update_notification=None):
+        """
+        Этот метод вызывается при успешном обновлении объекта.
+        """
+        instance = serializer.save()
+
+        # --- ЛОГИКА ОТПРАВКИ ПИСЕМ ---
+        # Получаем всех подписчиков этого курса (исключая владельца)
+        subscribers = instance.subscriptions.exclude(user=instance.owner).values_list('user__email', flat=True)
+        subscriber_list = list(subscribers)
+
+        # Если есть подписчики, вызываем задачу Celery (асинхронно!)
+        if subscriber_list:
+            send_course_update_notification.delay(instance.title, subscriber_list)
+
 
 class LessonListCreate(generics.ListCreateAPIView):
     queryset = Lesson.objects.all()
