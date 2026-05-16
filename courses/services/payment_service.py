@@ -2,8 +2,6 @@ import stripe
 import os
 from django.conf import settings
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
-
 
 def create_stripe_product_and_price(course):
     stripe.api_key = settings.STRIPE_SECRET_KEY
