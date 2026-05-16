@@ -56,8 +56,8 @@ jobs:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: |
-          python manage.py migrate
-          python manage.py test --settings=config.settings.test --verbosity=2
+          python manage.py migrate --settings=config.settings.ci 
+           python manage.py test --settings=config.settings.ci --verbosity=2
 
   # --- ЭТАП 2: ДЕПЛОЙ (выполняется только если тесты успешны) ---
   deploy:
