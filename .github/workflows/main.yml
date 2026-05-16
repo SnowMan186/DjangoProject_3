@@ -50,8 +50,9 @@ jobs:
 
       - name: Run Migrations and Tests 🧪
         env:
-          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
-          SECRET_KEY: test-secret-key-for-ci
+          DATABASE_URL: postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
         run: |
           python manage.py migrate
           python manage.py test --settings=config.settings.test --verbosity=2
