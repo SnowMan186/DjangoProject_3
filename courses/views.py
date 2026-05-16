@@ -9,6 +9,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from .paginators import StandardResultsSetPagination
 from .services.payment_service import create_stripe_product_and_price, create_checkout_session
+import stripe
+from django.conf import settings
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -123,6 +125,7 @@ class CreatePaymentSessionView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
+        stripe.api_key = settings.STRIPE_SECRET_KEY
         course_id = request.data.get('course_id')
 
         if not course_id:

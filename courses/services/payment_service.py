@@ -6,6 +6,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 def create_stripe_product_and_price(course):
+    stripe.api_key = settings.STRIPE_SECRET_KEY
     """
     Создает Продукт и Цену в Stripe.
     """
@@ -35,6 +36,7 @@ def create_stripe_product_and_price(course):
 
 
 def create_checkout_session(price_id):
+    stripe.api_key = settings.STRIPE_SECRET_KEY
     """
     Создает Сессию оплаты (Checkout Session) по ID цены.
     """
