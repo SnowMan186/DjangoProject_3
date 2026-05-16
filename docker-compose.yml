@@ -1,5 +1,8 @@
 version: '3.9'
 
+env_file:
+  - .docker.env
+
 services:
   db:
     image: postgres:16-alpine
