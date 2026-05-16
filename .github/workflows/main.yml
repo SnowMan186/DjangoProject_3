@@ -19,6 +19,8 @@ jobs:
           POSTGRES_DB: test_db
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         ports: ['5432:5432']
         options: >-
           --health-cmd pg_isready
