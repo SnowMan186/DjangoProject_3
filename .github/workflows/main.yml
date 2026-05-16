@@ -52,13 +52,14 @@ jobs:
 
       - name: Run Migrations and Tests 🧪
         env:
-          DATABASE_URL: postgres://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          DJANGO_SETTINGS_MODULE: config.settings.ci
         run: |
-          python manage.py migrate
-          python manage.py test --verbosity=2
+          python manage.py migrate --settings=config.settings.ci 
+          python manage.py test --settings=config.settings.ci --verbosity=2
 
   # --- ЭТАП 2: ДЕПЛОЙ (выполняется только если тесты успешны) ---
   deploy:
