@@ -2,9 +2,9 @@ name: CI / Lint / Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ Homework-35.2 ]
   pull_request:
-    branches: [ main ]
+    branches: [ Homework-35.2 ]
 
 jobs:
   build:
@@ -15,7 +15,7 @@ jobs:
       - name: Checkout repository 📜
         uses: actions/checkout@v4
 
-      # Шаг 2: Устанавливаем Python 3.11
+      # Шаг 2: Устанавливаем Python 4.2.17
       - name: Set up Python 🐍
         uses: actions/setup-python@v5
         with:
@@ -30,7 +30,7 @@ jobs:
       # Шаг 4: Проверка стиля кода (Linting)
       - name: Linting with Flake8 ✨
         run: |
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=120 --statistics
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=119 --statistics
 
       # Шаг 5: Запуск тестов Django
       - name: Run Django Tests 🧪
