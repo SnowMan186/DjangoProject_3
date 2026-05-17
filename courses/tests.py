@@ -2,7 +2,6 @@ from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from .models import Course, Lesson
-from users.models import User
 
 User = get_user_model()
 

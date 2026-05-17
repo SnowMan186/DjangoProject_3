@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'courses',
     'rest_framework_simplejwt',
     'django_celery_beat',
+    'users.apps.UsersConfig'
 ]
 
 MIDDLEWARE = [
@@ -150,3 +151,5 @@ CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+AUTH_USER_MODEL = 'users.User'
