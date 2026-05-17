@@ -50,16 +50,17 @@ jobs:
 
       - name: Run Migrations and Tests 🧪
         env:
-          DB_NAME: test_db
-          DB_USER: test_user
-          DB_PASSWORD: test_password
-          DB_HOST: localhost
-          DB_PORT: 5432
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
           DEBUG: 'True'
-        run: |          
-          python manage.py migrate          
+        run: |
+          echo "import os" > /tmp/ci.py
+          echo "import dj_database_url" >> /tmp/ci.py
+          echo "DATABASES = {'default': dj_database_url.config(os.environ.get('DATABASE_URL'))}" >> /tmp/ci.py
+          echo "SECRET_KEY = os.environ.get('SECRET_KEY')" >> /tmp/ci.py
+          cho "DEBUG = os.environ.get('DEBUG')" >> /tmp/ci.py                        
+          python manage.py migrate --settings=/tmp/ci_settings                       
           python manage.py test --verbosity=2 --failfast
 
   # --- ЭТАП 2: ДЕПЛОЙ (выполняется только если тесты успешны) ---
