@@ -52,15 +52,13 @@ jobs:
 
       - name: Run Migrations and Tests 🧪
         env:
-          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
-          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          POSTGRES_DB: test_db
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          DJANGO_SETTINGS_MODULE: config.settings.base
-          INSTALLED_APPS: "{{ lookup('env', 'DJANGO_SETTINGS_MODULE') | regex_replace('config.settings.', '') | regex_replace('base', '') | trim }}"
         run: |
-          python manage.py migrate --settings=$DJANGO_SETTINGS_MODULE
-          python manage.py test --verbosity=2 --settings=config.settings.test
+          python manage.py migrate
+          python manage.py test --verbosity=2
 
   # --- ЭТАП 2: ДЕПЛОЙ (выполняется только если тесты успешны) ---
   deploy:
