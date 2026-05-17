@@ -2,8 +2,7 @@ from rest_framework import viewsets, generics, filters, permissions
 from .models import User, Payment
 from .serializers import UserSerializer, PaymentSerializer
 from django_filters.rest_framework import DjangoFilterBackend
-from .forms import CustomUserCreationForm
-from django.views.generic.edit import CreateView
+
 
 
 class IsOwnerOrAdmin:
@@ -45,7 +44,3 @@ class PaymentListView(generics.ListAPIView):
     filterset_fields = ['course', 'lesson', 'payment_method']
     ordering_fields = ['date']
 
-class SignupView(CreateView):
-    form_class = CustomUserCreationForm
-    template_name = 'registration/signup.html'
-    success_url = '/'
