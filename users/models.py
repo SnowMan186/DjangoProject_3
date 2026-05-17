@@ -27,8 +27,6 @@ class User(AbstractUser):
         related_query_name="user",
     )
 
-    def __repr__(self):
-        return f"<User({self.pk}): {self.username}>"
 
 class Payment(models.Model):
     PAYMENT_METHOD_CHOICES = [
