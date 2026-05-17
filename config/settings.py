@@ -44,7 +44,6 @@ INSTALLED_APPS = [
     'courses',
     'rest_framework_simplejwt',
     'django_celery_beat',
-    'users.apps.UsersConfig'
 ]
 
 MIDDLEWARE = [
