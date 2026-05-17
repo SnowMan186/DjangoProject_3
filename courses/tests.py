@@ -11,9 +11,7 @@ class CoursesAPITestCase(TestCase):
     def setUp(self):
         """Настройка тестовых данных."""
         self.user1 = User.objects.create_user(username='user1', email='user1@example.com', password='password')
-
-        print(type(self.user1))
-        print(isinstance(self.user1, User))
+        self.user2 = User.objects.create_user(username='user2', email='user2@example.com', password='password')
 
         self.client = Client()
 
