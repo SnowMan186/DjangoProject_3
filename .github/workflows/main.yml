@@ -59,7 +59,7 @@ jobs:
           echo "import dj_database_url" >> /tmp/ci.py
           echo "DATABASES = {'default': dj_database_url.config(os.environ.get('DATABASE_URL'))}" >> /tmp/ci.py
           echo "SECRET_KEY = os.environ.get('SECRET_KEY')" >> /tmp/ci.py
-          cho "DEBUG = os.environ.get('DEBUG')" >> /tmp/ci.py                        
+          echo "DEBUG = os.environ.get('DEBUG')" >> /tmp/ci.py                        
           python manage.py migrate --settings=/tmp/ci_settings                       
           python manage.py test --verbosity=2 --failfast
 
