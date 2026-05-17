@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from .models import Course, Lesson
+from users.models import User
 
 User = get_user_model()
 
@@ -11,8 +12,11 @@ class CoursesAPITestCase(TestCase):
     def setUp(self):
         """Настройка тестовых данных."""
         # Создаем двух пользователей: обычного и модератора/админа если нужно
-        self.user1 = User.objects.create_user(username='user1', email='user1@test.com', password='testpass123')
-        self.user2 = User.objects.create_user(username='user2', email='user2@test.com', password='testpass123')
+        self.user1 = User.objects.create_user(username='user1', email='user1@example.com', password='password')
+        self.user2 = User.objects.create_user(username='user2', email='user2@example.com', password='password')
+
+        print(type(self.user1))
+        print(isinstance(self.user1, User))
 
         self.client = Client()
 
