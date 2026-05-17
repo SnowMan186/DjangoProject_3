@@ -19,9 +19,7 @@ jobs:
           POSTGRES_DB: test_db
           POSTGRES_USER: test_user
           POSTGRES_PASSWORD: test_password
-          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        ports: ['5432:5432']
+        ports: [ '5432:5432' ]
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -52,15 +50,14 @@ jobs:
 
       - name: Run Migrations and Tests 🧪
         env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
-          DEBUG: True
-        run: |
-          python manage.py migrate
-          python manage.py test --verbosity=2
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          DEBUG: 'True'
+
+        run: |          
+          python manage.py migrate          
+          python manage.py test --verbosity=2 --failfast
 
   # --- ЭТАП 2: ДЕПЛОЙ (выполняется только если тесты успешны) ---
   deploy:
