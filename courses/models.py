@@ -1,16 +1,13 @@
 from django.db import models
-from users.models import User
 
 
 class Course(models.Model):
-    objects = None
     owner = models.ForeignKey('users.User', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     preview = models.ImageField(upload_to='courses/previews/', blank=True, null=True)
     description = models.TextField()
 
 class Lesson(models.Model):
-    objects = None
     owner = models.ForeignKey('users.User', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='lessons', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
@@ -23,7 +20,7 @@ class Subscription(models.Model):
     Модель связи пользователя и курса.
     """
     objects = None
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriptions')
+    user = models.ForeignKey('users.User', on_delete=models.CASCADE, related_name='subscriptions')
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='subscriptions')
     date_subscribed = models.DateTimeField(auto_now_add=True)
 
