@@ -1,7 +1,8 @@
 from rest_framework import viewsets, generics, permissions, status
+from rest_framework.decorators import action
 from users.models import Payment
 from .models import Course, Lesson, Subscription
-from .serializers import LessonSerializer, CourseDetailSerializer, CourseListSerializer
+from .serializers import LessonSerializer, CourseDetailSerializer, CourseSerializer
 from users.permissions import IsModerator, IsOwnerOrAdmin
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
@@ -11,35 +12,37 @@ from .paginators import StandardResultsSetPagination
 from .services.payment_service import create_stripe_product_and_price, create_checkout_session
 import stripe
 from django.conf import settings
+from .tasks import send_course_update_notification
+
+
 
 
 class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
-    serializer_class = LessonSerializer
 
     def get_serializer_class(self):
-        if self.action == 'retrieve':
+        if self.action == "retrieve":
             return CourseDetailSerializer
-        return CourseListSerializer
+        return CourseSerializer
 
     def get_permissions(self):
         """
-        Мгновенно определяем права доступа для каждого действия.
-        Используем ~IsModerator для запрета создания.
+        Определяем права доступа для каждого действия.
         """
-        if self.action in ['list', 'retrieve']:
+        permission_classes = [permissions.IsAuthenticated]
+        if self.action in ["list", "retrieve"]:
             # Просмотр списка и деталей разрешен всем авторизованным пользователям
             permission_classes = [permissions.IsAuthenticated]
 
-        elif self.action == 'create':
+        elif self.action == "create":
             # СОЗДАНИЕ: Только Аутентифицированные И НЕ Модераторы
             permission_classes = [permissions.IsAuthenticated, ~IsModerator]
 
-        elif self.action in ['update', 'partial_update']:
+        elif self.action in ["update", "partial_update"]:
             # РЕДАКТИРОВАНИЕ: Владельцы/Админы ИЛИ Модераторы (логика внутри IsOwnerOrAdmin)
             permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
-        elif self.action == 'destroy':
+        elif self.action == "destroy":
             # УДАЛЕНИЕ: Только Владельцы или Админы (Модераторам запрещено)
             permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
@@ -49,7 +52,20 @@ class CourseViewSet(viewsets.ModelViewSet):
         # Привязываем курс к авторизованному пользователю при создании
         serializer.save(owner=self.request.user)
 
-    def perform_update(self, serializer, send_course_update_notification=None):
+    @action(detail=True, methods=["post"])
+    def subscribe(self, request, pk=None):
+        """
+        Подписка на курс.
+        """
+        course = get_object_or_404(Course, pk=pk)
+        subscription, created = course.subscriptions.get_or_create(user=request.user)
+        if created:
+            return Response({"message": "Подписка добавлена"}, status=status.HTTP_200_OK)
+        else:
+            subscription.delete()
+            return Response({"message": "Подписка удалена"}, status=status.HTTP_200_OK)
+
+    def perform_update(self, serializer):
         """
         Этот метод вызывается при успешном обновлении объекта.
         """
@@ -57,7 +73,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
         # --- ЛОГИКА ОТПРАВКИ ПИСЕМ ---
         # Получаем всех подписчиков этого курса (исключая владельца)
-        subscribers = instance.subscriptions.exclude(user=instance.owner).values_list('user__email', flat=True)
+        subscribers = instance.subscriptions.exclude(user=instance.owner).values_list("user__email", flat=True)
         subscriber_list = list(subscribers)
 
         # Если есть подписчики, вызываем задачу Celery (асинхронно!)
